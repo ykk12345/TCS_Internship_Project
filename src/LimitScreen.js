@@ -58,7 +58,7 @@ const LimitScreen = ({
     limitRatings: []
   });
   const [showRatingsDropdown, setShowRatingsDropdown] = useState(false);
-  const ratings = ['AAA', 'AA+', 'AA', 'AA-', 'BBB', 'BB+', 'BB', 'BB-', 'B', 'C', 'D', 'E'];
+  const ratings = ['AAA', 'AA+', 'AA', 'AA-', 'BBB', 'BB+', 'BB', 'BB-', 'B', 'C', 'default'];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

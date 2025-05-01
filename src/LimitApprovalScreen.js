@@ -100,14 +100,14 @@ const LimitApprovalScreen = ({
     }));
   };
 
-  const handleInapproval = () => {
+  const handleReturn = () => {
     if (formData.currentApprover === '') {
       alert('Please enter the current approver name');
       return;
     }
     setFormData(prev => ({
       ...prev,
-      loanStatus: 'Loan put for inapproval process',
+      loanStatus: 'Loan returned',
       approvalStatus: 0
     }));
   };
@@ -196,10 +196,10 @@ const LimitApprovalScreen = ({
             Reject
           </button>
           <button 
-            onClick={handleInapproval}
+            onClick={handleReturn}
             style={{ ...buttonStyle, background: '#ffc107', color: '#000' }}
           >
-            Put for Inapproval
+            Return
           </button>
         </div>
       </div>
