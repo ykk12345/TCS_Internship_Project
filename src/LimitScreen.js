@@ -43,6 +43,7 @@ const LimitScreen = ({
   approver1 = '',
   approver2 = '',
   onApprovalClick,
+  cpRating = ''
 }) => {
   const [formData, setFormData] = useState({
     limitId: limitId,
@@ -54,12 +55,12 @@ const LimitScreen = ({
     maturityDate: maturityDate,
     approver1: approver1,
     approver2: approver2,
-    currency: 'USD',
-    limitRatings: []
+    currency: 'EUR',
+    cpRating: cpRating
   });
   const [showRatingsDropdown, setShowRatingsDropdown] = useState(false);
   const ratings = ['AAA', 'AA+', 'AA', 'AA-', 'BBB', 'BB+', 'BB', 'BB-', 'B', 'C', 'default'];
-
+  console.log(formData)
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -71,15 +72,16 @@ const LimitScreen = ({
   const handleRatingChange = (rating) => {
     setFormData(prev => ({
       ...prev,
-      limitRatings: prev.limitRatings.includes(rating)
-        ? prev.limitRatings.filter(r => r !== rating)
-        : [...prev.limitRatings, rating]
+      limitRating: rating
     }));
+    setShowRatingsDropdown(false); // Optional: closes dropdown after selection
   };
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onApprovalClick(formData);
+    console.log("Received entry:", e);
   };
 
   return (
@@ -124,14 +126,14 @@ const LimitScreen = ({
                 onChange={(e) => setFormData(prev => ({ ...prev, currency: e.target.value }))} 
                 style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1.5px solid #a86b00', fontFamily: 'monospace', fontSize: '1.1rem', background: '#f7f7f7' }}
               >
-                <option value="USD">USD</option>
+                {/* <option value="USD">USD</option> */}
                 <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
+                {/* <option value="GBP">GBP</option>
                 <option value="INR">INR</option>
-                <option value="JPY">JPY</option>
+                <option value="JPY">JPY</option>_
                 <option value="CNY">CNY</option>
                 <option value="AUD">AUD</option>
-                <option value="CAD">CAD</option>
+                <option value="CAD">CAD</option> */}
               </select>
             </div>
           </div>
@@ -150,7 +152,7 @@ const LimitScreen = ({
                 }}
                 onClick={() => setShowRatingsDropdown((v) => !v)}
               >
-                {formData.limitRatings.length > 0 ? formData.limitRatings.join(', ') : 'Select rating(s)'}
+                {formData.cpRating ? formData.cpRating : 'Select a rating'}
                 <span style={{ marginLeft: 'auto', color: '#a86b00', fontWeight: 'bold' }}>▼</span>
               </div>
               {showRatingsDropdown && (
@@ -182,12 +184,14 @@ const LimitScreen = ({
                       }}
                     >
                       <input
-                        type="checkbox"
-                        checked={formData.limitRatings.includes(rating)}
-                        onChange={() => handleRatingChange(rating)}
-                        style={{ accentColor: '#a86b00' }}
-                      />
-                      {rating}
+                         type="radio"
+                         name="limitRating"
+                         value={rating}
+                         checked={formData.limitRating === rating}
+                         onChange={() => handleRatingChange(rating)}
+                         style={{ accentColor: '#a86b00' }}
+                       />
+                       {rating}
                     </label>
                   ))}
                 </div>

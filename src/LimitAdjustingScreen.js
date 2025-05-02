@@ -486,7 +486,9 @@ const LimitAdjustingScreen = ({ onSubmit }) => {
   const [searchType, setSearchType] = useState('name');
   const [counterparty, setCounterparty] = useState('');
   const [showBranches, setShowBranches] = useState(false);
-  const [selectedBranches, setSelectedBranches] = useState([]);
+  // const [selectedBranches, setSelectedBranches] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState(null);
+
   const [limitAmount, setLimitAmount] = useState('');
   const [limitName, setLimitName] = useState('');
   const [history, setHistory] = useState([]);
@@ -500,35 +502,48 @@ const LimitAdjustingScreen = ({ onSubmit }) => {
       .catch(error => console.error('Error fetching counterparties:', error));
   }, []);
 
+  // const handleSearch = () => {
+  //   if (counterparty.trim().length > 0) {
+  //     setShowBranches(true);
+  //     setSelectedBranches([]);
+  //     setMessage('');
+  //   }
+  // };
   const handleSearch = () => {
     if (counterparty.trim().length > 0) {
       setShowBranches(true);
-      setSelectedBranches([]);
+      setSelectedBranch(null);  // Clear previously selected single branch
       setMessage('');
     }
   };
-
+  
   const handleCounterpartyChange = (e) => {
     setCounterparty(e.target.value);
     setShowBranches(false);
     setMessage('');
   };
 
+  // const handleBranchSelect = (branch) => {
+  //   setSelectedBranches(prev => {
+  //     const exists = prev.find(b => b.cpId === branch.cpId);
+  //     return exists ? prev.filter(b => b.cpId !== branch.cpId) : [...prev, branch];
+  //   });
+// };
   const handleBranchSelect = (branch) => {
-    setSelectedBranches(prev => {
-      const exists = prev.find(b => b.cpId === branch.cpId);
-      return exists ? prev.filter(b => b.cpId !== branch.cpId) : [...prev, branch];
-    });
+    setSelectedBranch(branch);
+    setMessage('');
   };
 
   const handleCreateLimit = () => {
-    if (selectedBranches.length > 0 && limitAmount && limitName) {
+    if (selectedBranch && limitAmount && limitName) {
       const entry = {
-        branches: selectedBranches,
+        branch: selectedBranch,
+        cpRating: String(selectedBranch.cpRating || ''),
         limitAmount,
         limitName,
         date: new Date().toLocaleString()
       };
+      console.log("📦 Received entry:", entry); // ✅ Console log added here
       setHistory([entry, ...history]);
       setLimitAmount('');
       setLimitName('');
@@ -536,6 +551,22 @@ const LimitAdjustingScreen = ({ onSubmit }) => {
       onSubmit && onSubmit(entry);
     }
   };
+  
+  // const handleCreateLimit = () => {
+  //   if (selectedBranches.length > 0 && limitAmount && limitName) {
+  //     const entry = {
+  //       branches: selectedBranches,
+  //       limitAmount,
+  //       limitName,
+  //       date: new Date().toLocaleString()
+  //     };
+  //     setHistory([entry, ...history]);
+  //     setLimitAmount('');
+  //     setLimitName('');
+  //     setMessage('✅ Limit created successfully!');
+  //     onSubmit && onSubmit(entry);
+  //   }
+  // };
 
   const handleLimitAmountChange = (e) => {
     const value = e.target.value;
@@ -569,8 +600,21 @@ const LimitAdjustingScreen = ({ onSubmit }) => {
 
         {showBranches && (
           <div style={{ marginTop: '1rem' }}>
-            <h4>Select Branches</h4>
+            <h4>Select Party</h4>
             {filteredBranches.map(branch => (
+              <div key={branch.cpId}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selectedBranch?.cpId === branch.cpId}
+                    onChange={() => handleBranchSelect(branch)}
+                  />
+                  {branch.cpName}
+                </label>
+              </div>
+            ))}
+
+            {/* {filteredBranches.map(branch => (
               <div key={branch.cpId}>
                 <label>
                   <input
@@ -581,7 +625,7 @@ const LimitAdjustingScreen = ({ onSubmit }) => {
                   {branch.cpName}
                 </label>
               </div>
-            ))}
+            ))} */}
           </div>
         )}
 
@@ -594,7 +638,8 @@ const LimitAdjustingScreen = ({ onSubmit }) => {
 
       {/* Right Content */}
       <div style={{ width: '70%', padding: '3rem' }}>
-        {selectedBranches.length > 0 && !showHistory && (
+        {/* {selectedBranches.length > 0 && !showHistory && ( */}
+        {selectedBranch && !showHistory && (
           <div>
             <h2>Create Limit</h2>
             <input
@@ -606,12 +651,12 @@ const LimitAdjustingScreen = ({ onSubmit }) => {
             />
             <input
               type="number"
-              placeholder="Limit Amount"
+              placeholder="Limit Amount in Euro"
               value={limitAmount}
               onChange={handleLimitAmountChange}
               style={{ display: 'block', marginBottom: '1rem', padding: '0.5rem', width: '100%' }}
-              min="1"
-              step="1"
+              min="0"
+              step="1000"
             />
             <button onClick={handleCreateLimit}>Create</button>
             {message && <p style={{ color: 'green', marginTop: '1rem' }}>{message}</p>}
@@ -628,7 +673,7 @@ const LimitAdjustingScreen = ({ onSubmit }) => {
                 <div key={idx} style={{ padding: '1rem', border: '1px solid #ccc', marginBottom: '1rem' }}>
                   <h4>{entry.limitName} - ₹{entry.limitAmount}</h4>
                   <p><strong>Date:</strong> {entry.date}</p>
-                  <p><strong>Branches:</strong> {entry.branches.map(b => b.cpName).join(', ')}</p>
+                  <p><strong>Branch:</strong> {entry.branch.cpName}</p>
                 </div>
               ))
             )}
