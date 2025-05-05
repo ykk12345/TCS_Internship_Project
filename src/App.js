@@ -1,9 +1,11 @@
+// src/App.js
 import React, { useState } from 'react';
 import Login from './Login';
 import Signup from './Signup';
 import LimitAdjustingScreen from './LimitAdjustingScreen';
 import LimitScreen from './LimitScreen';
 import LimitApprovalScreen from './LimitApprovalScreen';
+import { LimitProvider } from './LimitContext';
 import './App.css';
 
 function App() {
@@ -15,9 +17,9 @@ function App() {
   const handleLimitSubmit = (data) => {
     setLimitScreenData({
       limitId: data.limitId,
+      limitName: data.limitName,
       limitAmount: data.limitAmount,
       counterparty: data.counterparty,
-      // Other fields can be filled by the user on the next screen
     });
   };
 
@@ -26,43 +28,40 @@ function App() {
     setShowApprovalScreen(true);
   };
 
-  if (showApprovalScreen && limitScreenData) {
-    return (
-      <LimitApprovalScreen 
-        limitId={limitScreenData.limitId}
-        limitName={limitScreenData.limitName}
-        approver1={limitScreenData.approver1}
-        approver2={limitScreenData.approver2}
-      />
-    );
-  }
-
-  if (limitScreenData) {
-    return (
-      <LimitScreen 
-        limitId={limitScreenData.limitId} 
-        limitAmount={limitScreenData.limitAmount} 
-        counterparty={limitScreenData.counterparty}
-        onApprovalClick={handleApprovalClick}
-      />
-    );
-  }
-
-  if (isLoggedIn) {
-    return <LimitAdjustingScreen onSubmit={handleLimitSubmit} />;
-  }
-
   return (
-    <div className="App" style={{ minHeight: '100vh', background: '#222', paddingTop: '3rem' }}>
-      <h1 style={{ color: '#fff', textAlign: 'center', fontFamily: 'monospace', marginBottom: '2rem' }}>
-        Login and Sign Up Screen
-      </h1>
-      {showLogin ? (
-        <Login onSwitch={() => setShowLogin(false)} onLogin={() => setIsLoggedIn(true)} />
-      ) : (
-        <Signup onSwitch={() => setShowLogin(true)} />
-      )}
-    </div>
+    <LimitProvider>
+      <div className="App" style={{ minHeight: '100vh', background: '#222', paddingTop: '3rem' }}>
+        {showApprovalScreen && limitScreenData ? (
+          <LimitApprovalScreen 
+            limitId={limitScreenData.limitId}
+            limitName={limitScreenData.limitName}
+            approver1={limitScreenData.approver1}
+            approver2={limitScreenData.approver2}
+          />
+        ) : limitScreenData ? (
+          <LimitScreen 
+            limitId={limitScreenData.limitId} 
+            limitName={limitScreenData.limitName}
+            limitAmount={limitScreenData.limitAmount} 
+            counterparty={limitScreenData.counterparty}
+            onApprovalClick={handleApprovalClick}
+          />
+        ) : isLoggedIn ? (
+          <LimitAdjustingScreen onSubmit={handleLimitSubmit} />
+        ) : (
+          <>
+            <h1 style={{ color: '#fff', textAlign: 'center', fontFamily: 'monospace', marginBottom: '2rem' }}>
+              Login and Sign Up Screen
+            </h1>
+            {showLogin ? (
+              <Login onSwitch={() => setShowLogin(false)} onLogin={() => setIsLoggedIn(true)} />
+            ) : (
+              <Signup onSwitch={() => setShowLogin(true)} />
+            )}
+          </>
+        )}
+      </div>
+    </LimitProvider>
   );
 }
 

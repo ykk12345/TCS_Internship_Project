@@ -453,9 +453,10 @@
 //   );
 // };
 
-import React, { useState, useEffect } from 'react';
+// import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
+import React, { useState, useEffect, useContext } from 'react';
+import { LimitContext } from './LimitContext';
 const sidebarStyle = {
   width: 60,
   background: '#e6e6e6',
@@ -483,11 +484,12 @@ const iconStyle = {
 };
 
 const LimitAdjustingScreen = ({ onSubmit }) => {
+  const { selectedBranch, setSelectedBranch, setCpRating } = useContext(LimitContext);
   const [searchType, setSearchType] = useState('name');
   const [counterparty, setCounterparty] = useState('');
   const [showBranches, setShowBranches] = useState(false);
   // const [selectedBranches, setSelectedBranches] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState(null);
+  // const [selectedBranch, setSelectedBranch] = useState(null);
 
   const [limitAmount, setLimitAmount] = useState('');
   const [limitName, setLimitName] = useState('');
@@ -531,18 +533,21 @@ const LimitAdjustingScreen = ({ onSubmit }) => {
 // };
   const handleBranchSelect = (branch) => {
     setSelectedBranch(branch);
+    setCpRating(branch.cpRating || '');
     setMessage('');
   };
 
   const handleCreateLimit = () => {
     if (selectedBranch && limitAmount && limitName) {
       const entry = {
+        limitName: limitName,
         branch: selectedBranch,
         cpRating: String(selectedBranch.cpRating || ''),
         limitAmount,
         limitName,
         date: new Date().toLocaleString()
       };
+      setCpRating(selectedBranch.cpRating)
       console.log("📦 Received entry:", entry); // ✅ Console log added here
       setHistory([entry, ...history]);
       setLimitAmount('');

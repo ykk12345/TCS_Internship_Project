@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-
+import React, { useState,useContext } from 'react';
+import { LimitContext } from './LimitContext';
 const Login = ({ onSwitch, onLogin }) => {
   const [userId, setUserId] = useState('');
   const [userName, setUserName] = useState('');
   const [error, setError] = useState('');
-
+  const { setUser } = useContext(LimitContext);
   const handleLogin = async () => {
     try {
       const response = await fetch(`http://localhost:9090/api/users/search?userId=${encodeURIComponent(userId)}&userName=${encodeURIComponent(userName)}`);
@@ -13,6 +13,7 @@ const Login = ({ onSwitch, onLogin }) => {
         const user = await response.json();
         console.log('User found:', user);
         setError('');
+        setUser(user);
         onLogin(user);  // Call parent function with user data
       } else if (response.status === 404) {
         setError('User does not exist. Please check your ID and name.');

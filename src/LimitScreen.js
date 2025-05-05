@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+// import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
+import { LimitContext } from './LimitContext';
 
 const cardStyle = {
   background: '#fff',
@@ -42,25 +44,47 @@ const LimitScreen = ({
   maturityDate = '',
   approver1 = '',
   approver2 = '',
-  onApprovalClick,
-  cpRating = ''
-}) => {
-  const [formData, setFormData] = useState({
-    limitId: limitId,
-    limitName: limitName,
-    limitAmount: limitAmount,
-    counterparty: counterparty,
-    product: product,
-    startDate: startDate,
-    maturityDate: maturityDate,
-    approver1: approver1,
-    approver2: approver2,
-    currency: 'EUR',
-    cpRating: cpRating
+  onApprovalClick
+}) => {const { selectedBranch, cpRating, setCpRating } = useContext(LimitContext);
+const { user } = useContext(LimitContext);
+const [formData, setFormData] = useState({
+  limitId: limitId,
+  limitName: limitName,
+  limitAmount: limitAmount,
+  counterparty: selectedBranch ? selectedBranch.cpName : counterparty,
+  product: product,
+  startDate: startDate,
+  maturityDate: maturityDate,
+  approver1: approver1,
+  approver2: approver2,
+  currency: 'EUR',
+  cpRating: cpRating || '',
+  productCategory: '',
+  productSubCategory: '',
+  productType: '',
+  product: ''
   });
+  const [showSubCategories, setShowSubCategories] = useState(false);
+const [showTypes, setShowTypes] = useState(false);
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      cpRating: cpRating || ''
+    }));
+  }, [cpRating]);
+
+  const handleRatingChange = (rating) => {
+    setCpRating(rating); // Update the context
+    setFormData(prev => ({
+      ...prev,
+      cpRating: rating
+    }));
+    setShowRatingsDropdown(false);
+  };
   const [showRatingsDropdown, setShowRatingsDropdown] = useState(false);
   const ratings = ['AAA', 'AA+', 'AA', 'AA-', 'BBB', 'BB+', 'BB', 'BB-', 'B', 'C', 'default'];
   console.log(formData)
+  console.log('Current User:',user)
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -69,14 +93,31 @@ const LimitScreen = ({
     }));
   };
 
-  const handleRatingChange = (rating) => {
-    setFormData(prev => ({
-      ...prev,
-      limitRating: rating
-    }));
-    setShowRatingsDropdown(false); // Optional: closes dropdown after selection
-  };
+  // const handleRatingChange = (rating) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     limitRating: rating
+  //   }));
+  //   setShowRatingsDropdown(false); // Optional: closes dropdown after selection
+  // };
   
+  const loanProducts = {
+    "Term Loans": {
+      "Short-term loans": ["1-3 years", "Bullet repayment", "Amortizing"],
+      "Medium-term loans": ["3-7 years", "Amortizing"],
+      "Long-term loans": ["7+ years", "Project finance"]
+    },
+    "Working Capital": {
+      "Overdraft": ["Secured", "Unsecured"],
+      "Cash Credit": ["Against property", "Against inventory"],
+      "Invoice Financing": ["With recourse", "Without recourse"]
+    },
+    "Trade Finance": {
+      "Letters of Credit": ["Import LC", "Export LC"],
+      "Bank Guarantees": ["Performance", "Financial"],
+      "Bill Discounting": []
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -187,7 +228,7 @@ const LimitScreen = ({
                          type="radio"
                          name="limitRating"
                          value={rating}
-                         checked={formData.limitRating === rating}
+                         checked={formData.cpRating === rating}
                          onChange={() => handleRatingChange(rating)}
                          style={{ accentColor: '#a86b00' }}
                        />
@@ -211,18 +252,6 @@ const LimitScreen = ({
             />
           </div>
           <div style={colStyle}>
-            <label style={labelStyle}>Product (type of product)</label>
-            <input 
-              style={fieldStyle} 
-              name="product"
-              value={formData.product}
-              onChange={handleInputChange}
-              placeholder="Enter Product"
-            />
-          </div>
-        </div>
-        <div style={rowStyle}>
-          <div style={colStyle}>
             <label style={labelStyle}>Start_date</label>
             <input 
               style={fieldStyle} 
@@ -232,6 +261,97 @@ const LimitScreen = ({
               onChange={handleInputChange}
             />
           </div>
+        </div>
+        <div style={rowStyle}>
+        <div style={colStyle}>
+  <label style={labelStyle}>Category</label>
+  
+  {/* Main Category Dropdown */}
+  <select
+    style={fieldStyle}
+    value={formData.productCategory}
+    onChange={(e) => {
+      const category = e.target.value;
+      setFormData({
+        ...formData,
+        productCategory: category,
+        productSubCategory: '',
+        productType: '',
+        product: category
+      });
+      setShowSubCategories(category !== '');
+      setShowTypes(false);
+    }}
+  >
+    <option value="">Select Product Category</option>
+    {Object.keys(loanProducts).map((category) => (
+      <option key={category} value={category}>
+        {category}
+      </option>
+    ))}
+  </select>
+
+  {/* Subcategory Dropdown (conditionally shown) */}
+  {showSubCategories && formData.productCategory && (
+    <select
+      style={{ ...fieldStyle, marginTop: '0.5rem' }}
+      value={formData.productSubCategory}
+      onChange={(e) => {
+        const subCategory = e.target.value;
+        const newProduct = `${formData.productCategory} - ${subCategory}`;
+        
+        setFormData({
+          ...formData,
+          productSubCategory: subCategory,
+          productType: '',
+          product: newProduct
+        });
+        setShowTypes(subCategory !== '' && 
+          loanProducts[formData.productCategory][subCategory].length > 0);
+      }}
+    >
+      <option value="">Select Subcategory</option>
+      {Object.keys(loanProducts[formData.productCategory]).map((subCategory) => (
+        <option key={subCategory} value={subCategory}>
+          {subCategory}
+        </option>
+      ))}
+    </select>
+  )}
+
+  {/* Type Dropdown (conditionally shown) */}
+  {showTypes && formData.productSubCategory && (
+    <select
+      style={{ ...fieldStyle, marginTop: '0.5rem' }}
+      value={formData.productType}
+      onChange={(e) => {
+        const type = e.target.value;
+        const newProduct = `${formData.productCategory} - ${formData.productSubCategory} - ${type}`;
+        
+        setFormData({
+          ...formData,
+          productType: type,
+          product: newProduct
+        });
+      }}
+    >
+      <option value="">Select Type</option>
+      {loanProducts[formData.productCategory][formData.productSubCategory].map((type) => (
+        <option key={type} value={type}>
+          {type}
+        </option>
+      ))}
+    </select>
+  )}
+
+  {/* Display selected product */}
+  {formData.product && (
+    <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: '#f0f0f0', borderRadius: '0.5rem' }}>
+      Selected: {formData.product}
+    </div>
+  )}
+</div>
+          
           <div style={colStyle}>
             <label style={labelStyle}>Maturity_date</label>
             <input 
